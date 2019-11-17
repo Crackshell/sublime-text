@@ -9,7 +9,7 @@ scope: text.xml.sval
 variables:
   valid_attributes: '(name)'
   valid_functions: '(loader|svals|d|dict|a|array)'
-  valid_types: '(h|hstring|s|string|i|int|long|f|float|b|bool|vec[234]|ivec[234]|bytes|null)'
+  valid_types: '(h|hstring|s|string|i|int|long|f|float|b|bool|i?vec[234]|bytes|null)'
 contexts:
   preprocessor-expression:
     - match: '\b[A-Z0-9_]+\b'
