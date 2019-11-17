@@ -1,4 +1,4 @@
-// SYNTAX TEST "Packages/User/AngelScript.sublime-syntax"
+// SYNTAX TEST "Packages/Crackshell/AngelScript.sublime-syntax"
 
 #author "Openplanet"
 // <- meta.preprocessor keyword.control.import
@@ -33,6 +33,18 @@ void func2(const string &in str, SValue& sval) {}
 //                               ^^^^^^ storage.type
 //                                     ^ keyword.other
 //                                       ^^^^ variable.parameter
+
+interface IThing
+// <- meta.interface storage.type.interface
+//        ^^^^^^ entity.name.interface
+{
+// <- punctuation.section.block.begin
+  void func();
+  // <- storage.type
+  //   ^^^^ entity.name.function
+  //         ^ punctuation.terminator
+}
+// <- punctuation.section.block.end
 
 enum MyEnum
 // <- storage.type.enum

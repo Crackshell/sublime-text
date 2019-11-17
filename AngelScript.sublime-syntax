@@ -43,6 +43,7 @@ contexts:
           push:
             - include: global
             - include: has-namespaces
+            - include: has-interfaces
             - include: has-classes
             - include: has-enums
             - include: has-definitions
@@ -76,6 +77,25 @@ contexts:
             - include: global
             - match: '(?={{identifier}}\s*\()'
               push: function-constructor-definition
+            - include: has-definitions
+            - match: '(?=})'
+              pop: true
+        - match: '}'
+          scope: punctuation.section.block.end
+          pop: true
+
+  interface:
+    - match: 'interface'
+      scope: storage.type.interface
+      set:
+        - meta_scope: meta.interface
+        - include: global
+        - match: '{{identifier}}'
+          scope: entity.name.interface
+        - match: '{'
+          scope: punctuation.section.block.begin
+          push:
+            - include: global
             - include: has-definitions
             - match: '(?=})'
               pop: true
@@ -562,6 +582,10 @@ contexts:
     - match: '\b(?=namespace)\b'
       push: namespace
 
+  has-interfaces:
+    - match: '\b(?=interface)\b'
+      push: interface
+
   has-classes:
     - include: has-metadatas
     - match: '\b(?=class)\b'
@@ -612,6 +636,7 @@ contexts:
 
   main:
     - include: has-namespaces
+    - include: has-interfaces
     - include: has-classes
     - include: has-enums
     - include: has-definitions
