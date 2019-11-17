@@ -541,6 +541,8 @@ contexts:
         1: keyword.control.import
       push:
         - meta_scope: meta.preprocessor
+        - match: '//.*'
+          scope: comment.line
         - match: '(?i)(if|else|endif)\b'
           scope: support.function
           set: preprocessor-expression

@@ -8,6 +8,44 @@ variables:
   valid_functions: '()'
   valid_types: '(unit|scenes|scene|collision|point|frame|sizes|colors|group)'
 contexts:
+  preprocessor-expression:
+    - match: '\b[A-Z0-9_]+\b'
+      scope: entity.name.constant
+    - match: '(\|\||&&)'
+      scope: keyword.operator.logical
+    - match: '"'
+      scope: punctuation.definition.string.begin
+      push:
+        - meta_scope: string.quoted.double
+        - match: '"'
+          scope: punctuation.definition.string.end
+          pop: true
+    - match: '$'
+      pop: true
+
+  has-preprocessor:
+    - match: '^\s*(%)'
+      captures:
+        1: keyword.control.import
+      push:
+        - meta_scope: meta.preprocessor
+        - match: '//.*'
+          scope: comment.line
+        - match: '(?i)(if|else|endif)\b'
+          scope: support.function
+          set: preprocessor-expression
+        - match: '(PROFILE_START|PROFILE_STOP)\b'
+          scope: support.function
+          set:
+            - meta_scope: string.unquoted
+            - match: '$'
+              pop: true
+        - match: '[A-Za-z_][A-Za-z0-9_]+'
+          scope: keyword.control.import
+          set: preprocessor-expression
+        - match: '$'
+          pop: true
+
   comment:
     - match: '<!--'
       scope: punctuation.definition.comment.begin
@@ -48,6 +86,7 @@ contexts:
 
   main:
     - include: comment
+    - include: has-preprocessor
     - match: '(<)/?$'
       captures:
         1: invalid.illegal.missing-entity
