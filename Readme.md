@@ -6,6 +6,8 @@ This package includes several Sublime Text syntaxes for multiple parts of Cracks
 3. Syntax for `.unit` files. It's also based on XML, and is somewhat context-aware. Behaviors embed the SValue syntax, and attributes are contextually highlighted.
 
 ## How to install
-The easiest way to install this package is through [Package Control](https://packagecontrol.io/). In Sublime Text, simply press `Ctrl+Shift+P`, navigate to "Install package", and find the package named "Crackshell".
+First of all, you require to have Sublime Text 3 version [3103](https://www.sublimetext.com/blog/articles/sublime-text-3-build-3103) or later.
+
+The easiest way to install this package is through [Package Control](https://packagecontrol.io/). In Sublime Text, simply press `Ctrl+Shift+P`, navigate to "Install package", and find the package named "Crackshell". If you don't see the package, you might have an older version of Sublime Text that is not supported by this package.
 
 Manual install is done by making a folder in your packages folder. On Windows for example, you clone the repository here: `C:\Users\Username\AppData\Roaming\Sublime Text 3\Packages\Crackshell\`
