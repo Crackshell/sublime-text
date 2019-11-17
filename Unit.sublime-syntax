@@ -1,0 +1,248 @@
+%YAML 1.2
+---
+name: Crackshell Unit
+file_extensions:
+  - unit
+scope: text.xml.unit
+variables:
+  valid_functions: '()'
+  valid_types: '(unit|scenes|scene|collision|point|frame|sizes|colors|group)'
+contexts:
+  comment:
+    - match: '<!--'
+      scope: punctuation.definition.comment.begin
+      push:
+        - meta_scope: comment.block
+        - match: '-->'
+          scope: punctuation.definition.comment.end
+          pop: true
+        - match: '-{2,}'
+          scope: invalid.illegal.double-hyphen-within-comment
+
+  string:
+    - meta_scope: string.quoted.double
+    - match: '"'
+      scope: punctuation.definition.string.end
+      pop: true
+
+  renderable-base-attributes:
+    - match: '(pos|delay|layer|ulayer)\b'
+      scope: support.other
+      push: attribute-value
+
+  attributes:
+    - match: '[A-Za-z0-9\-_]+\b'
+      scope: entity.other.attribute-name
+      push: attribute-value
+    - match: '(?=/?>)'
+      pop: true
+
+  attribute-value:
+    - match: '='
+      scope: punctuation.separator.key-value
+    - match: '"'
+      scope: punctuation.definition.string.begin
+      push: string
+    - match: ''
+      pop: true
+
+  main:
+    - include: comment
+    - match: '(<)/?$'
+      captures:
+        1: invalid.illegal.missing-entity
+    - match: '<'
+      scope: punctuation.definition.tag.begin
+      push:
+        - meta_scope: meta.tag.xml
+
+        - match: '/?>'
+          scope: punctuation.definition.tag.end
+          pop: true
+        - match: '/'
+          scope: punctuation.definition.tag.begin
+
+        - match: '\b(behavior)\s+(class)(=)((")([^"]+)("))'
+          captures:
+            1: support.function
+            2: support.other
+            3: punctuation.separator.key-value
+            4: string.quoted.double
+            5: punctuation.definition.string.begin
+            6: entity.name.class
+            7: punctuation.definition.string.end
+          set:
+            - match: '>'
+              scope: punctuation.definition.tag.end
+              embed: scope:text.xml.sval
+              escape: '(</)(behavior)(>)'
+              escape_captures:
+                1: punctuation.definition.tag.begin
+                2: support.function
+                3: punctuation.definition.tag.end
+            - match: ''
+              pop: true
+
+        - match: '\b(data)\s+(name)(=)((")[^"]+("))'
+          captures:
+            1: entity.name.tag storage.type
+            2: support.other
+            3: punctuation.separator.key-value
+            4: string.quoted.double
+            5: punctuation.definition.string.begin
+            6: punctuation.definition.string.end
+          set:
+            - match: '>'
+              scope: punctuation.definition.tag.end
+              embed: scope:text.xml.sval
+              escape: '(</)(data)(>)'
+              escape_captures:
+                1: punctuation.definition.tag.begin
+                2: support.function
+                3: punctuation.definition.tag.end
+            - match: ''
+              pop: true
+
+        - match: '\b(unit)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(slot|layer|netsync|save)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(scenes)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '[A-Za-z0-9\-_]+\b'
+              scope: entity.other.attribute-name variable.parameter
+              push: attribute-value
+            - match: '(?=/?>)'
+              pop: true
+
+        - match: '\b(scene)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(random-start|name|trigger-snd|src)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(minimap_sprite)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(layer|origin|texture|frame)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(collision)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(static|bullet|nav-block)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(circle|rect|polygon)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(sensor|decompose|density|(shoot|aim|jam|charge)-through|charging|(ignore-)?non-player|offset|radius)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(sprite)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - include: renderable-base-attributes
+            - match: '(texture|material|origin|looping|loopback)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(frame)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(time)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(light)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - include: renderable-base-attributes
+            - include: attributes
+
+        - match: '\b(cast-shadows|shadow-cast-pos(-jitter)?|length|looping|overlay|size|color|overbright)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(value)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(text)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - include: renderable-base-attributes
+            - match: '(font|material|text|debug|color|origin|width|align)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(shadow)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - include: renderable-base-attributes
+            - include: attributes
+
+        - match: '\b(effect)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - include: renderable-base-attributes
+            - match: '(src)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(locator)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(pos|name)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(range)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(pos|radius)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b{{valid_functions}}\b'
+          scope: entity.name.tag support.function
+        - match: '\b{{valid_types}}\b'
+          scope: entity.name.tag storage.type
+        - match: '\b[A-Za-z0-9\-_]+\b'
+          scope: invalid.illegal.unsupported-type
+        - match: '\s+'
+          push: attributes

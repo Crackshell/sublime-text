@@ -1,0 +1,91 @@
+%YAML 1.2
+---
+name: Crackshell SValue
+file_extensions:
+  - sval
+  - resources.xml
+  - info.xml
+scope: text.xml.sval
+variables:
+  valid_attributes: '(name)'
+  valid_functions: '(loader|d|dict|a|array)'
+  valid_types: '(h|hstring|s|string|i|int|long|f|float|b|bool|vec[234]|ivec[234]|bytes|null)'
+contexts:
+  comment:
+    - match: '<!--'
+      scope: punctuation.definition.comment.begin
+      push:
+        - meta_scope: comment.block
+        - match: '-->'
+          scope: punctuation.definition.comment.end
+          pop: true
+        - match: '-{2,}'
+          scope: invalid.illegal.double-hyphen-within-comment
+
+  string:
+    - meta_scope: string.quoted.double
+    - match: '"'
+      scope: punctuation.definition.string.end
+      pop: true
+
+  attribute-value:
+    - match: '='
+      scope: punctuation.separator.key-value
+    - match: '"'
+      scope: punctuation.definition.string.begin
+      push: string
+    - match: ''
+      pop: true
+
+  main:
+    - include: comment
+    - match: '(<)/?$'
+      captures:
+        1: invalid.illegal.missing-entity
+    - match: '<'
+      scope: punctuation.definition.tag.begin
+      push:
+        - meta_scope: meta.tag.xml
+
+        - match: '/?>'
+          scope: punctuation.definition.tag.end
+          pop: true
+        - match: '/'
+          scope: punctuation.definition.tag.begin
+
+        - match: '\b(string)\s+(name)(=)((")(class)("))(>)'
+          captures:
+            1: entity.name.tag keyword.other
+            2: support.other
+            3: punctuation.separator.key-value
+            4: string.quoted.double
+            5: punctuation.definition.string.begin
+            6: entity.name.function
+            7: punctuation.definition.string.end
+            8: punctuation.definition.tag.end
+          set:
+            - match: '([A-Za-z_][A-Za-z0-9_]+)(::)'
+              captures:
+                1: entity.name.namespace
+                2: punctuation.separator
+            - match: '[A-Za-z_][A-Za-z0-9_]+'
+              scope: entity.name.class
+            - match: ''
+              pop: true
+
+        - match: '\b{{valid_functions}}\b'
+          scope: entity.name.tag support.function
+        - match: '\b{{valid_types}}\b'
+          scope: entity.name.tag keyword.other
+        - match: '\b[A-Za-z0-9_]+\b'
+          scope: invalid.illegal.unsupported-type
+        - match: '\s+'
+          push:
+            - match: '{{valid_attributes}}\b'
+              scope: support.other
+              push: attribute-value
+            - match: '[A-Za-z0-9\-]+\b'
+              scope: invalid.illega.unsupported-attribute
+              push: attribute-value
+            - match: '(?=/?>)'
+              pop: true

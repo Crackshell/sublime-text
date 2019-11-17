@@ -1,0 +1,618 @@
+%YAML 1.2
+---
+name: Crackshell AngelScript
+file_extensions:
+  - as
+  - asc
+  - mas
+scope: source.as
+variables:
+  identifier: '[A-Za-z_][A-Za-z0-9_]*'
+  number: ((0(x|X)[0-9a-fA-F]*)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)(L|l|UL|ul|u|U|F|f)?
+  primitives: (int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|bool|float|double|bool|auto|void|array|dictionary|ref)
+
+  language_variables: '(this)'
+  language_support_functions: '(GetVar(Int|Float|Bool|String|Ivec2|Vec[234])|GetParam(Int|Long|Float|Bool|I?Vec[234]|String|Array|Dictionary)|HashString|SetVar|AddVar|print|xy|xyz|xyzw|atan|sin|asin|cos|acos|sqrt|pow|pow2|round|roundl|floor|ceil|log|normalize|dot|length|lengthsq|max|min|clamp|randf|randi|randdir|randfn|addrot|rottowards|capangle|angdiff|dist|distsq|formatTime|ease|formatThousands|formatInt|formatFloat|lerp|ilerp|sign|tocolor|i?vec[234]|UnitPtr)'
+
+  control_keywords_single: '(return|break|continue)'
+  control_keywords: '(if|else|in|while|do|switch|try|catch)'
+
+  operators_bitwise: '([|&^~]|<{2,3}|>{2,3})'
+  operators_arithmetic: '[+\-\*/%]'
+  operators_assignment: (=|{{operators_arithmetic}}=|{{operators_bitwise}}=|\+\+|--)
+  operators_logical: '(\|\||&&|==|!=?|<=|>=|<(?!<)|>(?!>))'
+  operators_words: '(and|or|not|is)'
+  operators: '({{operators_bitwise}}|{{operators_arithmetic}}|{{operators_assignment}}|{{operators_logical}}|{{operators_words}})'
+
+  possible_typename: (const\s*)?({{primitives}}|(({{identifier}}::)*[A-Za-z_][A-Za-z0-9_<>@]*))(\s*&(in|out|inout)?\s*)?
+contexts:
+  global:
+    - include: has-comments
+    - include: has-preprocessor
+
+  namespace:
+    - match: 'namespace'
+      scope: storage.type.namespace
+      set:
+        - meta_scope: meta.namespace
+        - include: global
+        - match: '{{identifier}}'
+          scope: entity.name.namespace
+        - match: '{'
+          scope: punctuation.section.block.begin
+          push:
+            - include: global
+            - include: has-namespaces
+            - include: has-classes
+            - include: has-enums
+            - include: has-definitions
+            - match: '(?=})'
+              pop: true
+        - match: '}'
+          scope: punctuation.section.block.end
+          pop: true
+
+  class:
+    - match: 'class'
+      scope: storage.type.class
+      set:
+        - meta_scope: meta.class
+        - include: global
+        - match: '{{identifier}}'
+          scope: entity.name.class
+        - match: ':'
+          scope: punctuation.separator
+          push:
+          - include: global
+          - match: '{{identifier}}'
+            scope: entity.other.inherited-class
+          - match: ','
+            scope: punctuation.separator
+          - match: '(?={)'
+            pop: true
+        - match: '{'
+          scope: punctuation.section.block.begin
+          push:
+            - include: global
+            - match: '(?={{identifier}}\s*\()'
+              push: function-constructor-definition
+            - include: has-definitions
+            - match: '(?=})'
+              pop: true
+        - match: '}'
+          scope: punctuation.section.block.end
+          pop: true
+
+  enum:
+    - match: 'enum'
+      scope: storage.type.enum
+      set:
+        - meta_scope: meta.enum
+        - include: global
+        - match: '{{identifier}}'
+          scope: entity.name.enum
+        - match: '{'
+          scope: punctuation.section.block.begin
+          push:
+            - include: global
+            - match: '{{identifier}}'
+              push:
+                - include: global
+                - match: '='
+                  scope: keyword.operator.assignment
+                  push:
+                    - include: global
+                    - match: '(?=[,}])'
+                      pop: true
+                    - include: expression
+                - match: ','
+                  scope: punctuation.separator
+                  pop: true
+                - match: '(?=})'
+                  pop: true
+            - match: '(?=})'
+              pop: true
+        - match: '}'
+          scope: punctuation.section.block.end
+          pop: true
+
+  stringescapes:
+    - match: '\\.'
+      scope: constant.character.escape
+  sstring:
+    - meta_scope: meta.string string.quoted.single
+    - include: stringescapes
+    - match: "'"
+      scope: punctuation.definition.string.end
+      pop: true
+    - match: '$'
+      pop: true
+  dstring:
+    - meta_scope: meta.string string.quoted.double
+    - include: stringescapes
+    - match: '"'
+      scope: punctuation.definition.string.end
+      pop: true
+    - match: '$'
+      pop: true
+  tstring:
+    - meta_scope: meta.string string.quoted.triple
+    - match: '"""'
+      scope: punctuation.definition.string.end
+      pop: true
+
+  expression-in-parens:
+    - include: global
+    - match: '\('
+      scope: punctuation.section.parens.begin
+      push: expression
+    - match: '\)'
+      scope: punctuation.section.parens.end
+      set:
+        - match: '\.'
+          scope: punctuation.accessor
+        - match: ''
+          pop: true
+
+  expression-has-functioncall:
+    - match: '\bcast(?=<)'
+      scope: keyword.other
+      push:
+        - include: global
+        - match: '<'
+          scope: punctuation.definition.generic.begin
+          push: typename
+        - match: '>'
+          scope: punctuation.definition.generic.end
+          set: expression-in-parens
+    - match: '\b{{primitives}}(?=\()'
+      scope: storage.type
+      push: expression-in-parens
+    - match: '(super)\s*(?=\()'
+      scope: meta.function-call
+      captures:
+        1: variable.language
+      push: expression-in-parens
+    - match: '(?=({{identifier}}\.?)+\s*(\())'
+      push:
+        - include: global
+        - meta_scope: meta.function-call
+        - match: '({{language_variables}})\s*(\.)'
+          captures:
+            1: variable.language
+            2: punctuation.accessor
+        - match: '(m_{{identifier}})\s*(\.)'
+          captures:
+            1: variable.other.member
+            2: punctuation.accessor
+        - match: '({{identifier}})\s*(\.)'
+          captures:
+            1: variable.other
+            2: punctuation.accessor
+        - match: '(?=({{identifier}})\s*(\())'
+          push:
+            - match: '\b{{language_support_functions}}\b'
+              scope: support.function
+            - match: '{{identifier}}'
+              scope: entity.name.function
+            - match: '\('
+              scope: punctuation.section.parens.begin
+              set: expression
+        - include: expression-in-parens
+
+  expression-has-operators:
+    - match: '(?=@?\b({{identifier}}\.?)+\s*({{operators_assignment}}|\[))'
+      push:
+        - match: '@'
+          scope: keyword.other
+        - match: '{{language_variables}}'
+          scope: variable.language
+          set: expression
+        - match: 'm_{{identifier}}'
+          scope: variable.other.member
+          set: expression
+        - match: '{{identifier}}'
+          scope: variable.other
+          set: expression
+
+  expression-has-namespace-accessor:
+    - match: '{{identifier}}(?=::)'
+      scope: entity.name.namespace
+      push:
+        - match: '::'
+          scope: punctuation.separator
+          pop: true
+
+  expression:
+    - meta_scope: meta.expression
+
+    - match: '{{operators_words}}'
+      scope: keyword.operator.word
+
+    - include: expression-has-functioncall
+
+    - match: '\b{{number}}\b'
+      scope: constant.numeric
+    - match: '\b(true|false|null)\b'
+      scope: constant.language
+
+    - match: "'"
+      scope: punctuation.definition.string.begin
+      push: sstring
+    - match: '"""'
+      scope: punctuation.definition.string.begin
+      push: tstring
+    - match: '"'
+      scope: punctuation.definition.string.begin
+      push: dstring
+
+    - include: expression-has-namespace-accessor
+
+    - match: '\b[A-Z][A-Z0-9_]+\b'
+      scope: entity.name.constant
+
+    - match: '@'
+      scope: keyword.other
+
+    - match: '{{language_variables}}'
+      scope: variable.language
+    - match: 'm_{{identifier}}'
+      scope: variable.other.member
+    - match: '{{identifier}}'
+      scope: variable.other
+
+    - match: '{'
+      scope: punctuation.section.braces.begin
+      push: expression
+    - match: '(?=\()'
+      push: expression-in-parens
+    - match: '\['
+      scope: punctuation.section.brackets.begin
+      push: expression
+    - match: '}'
+      scope: punctuation.section.braces.end
+      pop: true
+    - match: '(?=\))'
+      pop: true
+    - match: '\]'
+      scope: punctuation.section.brackets.end
+      set:
+        - include: global
+        - match: '\.'
+          scope: punctuation.accessor
+        - match: ''
+          pop: true
+
+    - match: '{{operators_logical}}'
+      scope: keyword.operator.logical
+    - match: '{{operators_assignment}}'
+      scope: keyword.operator.assignment
+    - match: '{{operators_arithmetic}}'
+      scope: keyword.operator.arithmetic
+    - match: '{{operators_bitwise}}'
+      scope: keyword.operator.bitwise
+
+    - match: '\.'
+      scope: punctuation.accessor
+    - match: ','
+      scope: punctuation.separator
+    - match: ';'
+      scope: punctuation.terminator
+      pop: true
+
+  code-scope:
+    - meta_scope: meta.codescope
+
+    - include: global
+
+    - match: ';'
+      scope: punctuation.terminator
+    - match: '{'
+      scope: punctuation.section.block.begin
+      push: code-scope
+    - match: '}'
+      scope: punctuation.section.block.end
+      pop: true
+
+    - include: expression-has-namespace-accessor
+
+    - match: '\b{{control_keywords_single}}\b'
+      scope: keyword.control
+      push: expression
+    - match: '\belse\b'
+      scope: keyword.control
+    - match: '\b(case)\s+(?=.*:)'
+      captures:
+        1: keyword.control
+      push:
+        - include: global
+        - match: ':'
+          scope: punctuation.separator
+          pop: true
+        - include: expression
+    - match: '\b(for)\s*'
+      captures:
+        1: keyword.control
+      push:
+        - include: global
+        - match: '\('
+          scope: punctuation.section.parens.begin
+          push:
+            - include: global
+            - match: '(?={{possible_typename}}\s*{{identifier}}\s*=)'
+              push:
+                - variable-definition
+                - typename
+            - match: '(?=\b({{identifier}}\.?)+\s*{{operators}})'
+              push:
+                - match: '{{language_variables}}'
+                  scope: variable.language
+                  push: expression
+                - match: 'm_{{identifier}}'
+                  scope: variable.other.member
+                  push: expression
+                - match: '{{identifier}}'
+                  scope: variable.other
+                  push: expression
+                - match: '(?=\))'
+                  pop: true
+            - match: ';'
+              scope: punctuation.terminator
+            - match: '\)'
+              scope: punctuation.section.parens.end
+              pop: true
+            - match: '(?={)'
+              pop: true
+        - match: '{'
+          scope: punctuation.section.block.begin
+          set: code-scope
+        - match: ''
+          pop: true
+    - match: '\b{{control_keywords}}\b'
+      scope: keyword.control
+      push:
+        - include: expression-in-parens
+        - match: '{'
+          scope: punctuation.section.block.begin
+          set: code-scope
+    - match: '(?=\()'
+      push: expression-in-parens
+
+    - include: expression-has-functioncall
+    - include: expression-has-operators
+    - include: has-definitions-in-code
+
+  typename:
+    - match: '\b(const)\s+\b'
+      captures:
+        1: storage.modifier
+    - match: '\b({{identifier}})(::)'
+      captures:
+        1: entity.name.namespace
+        2: punctuation.separator
+    - match: '\b({{primitives}}|{{identifier}})\b'
+      scope: storage.type
+    - match: '\s*(&(in|out|inout)?)'
+      captures:
+        1: keyword.other
+    - match: '@'
+      scope: keyword.other
+    - match: '<'
+      scope: punctuation.definition.generic.begin
+      push:
+        - match: '>'
+          scope: punctuation.definition.generic.end
+          pop: true
+        - include: typename
+    - match: ''
+      pop: true
+
+  generic-container:
+    - match: '<'
+      scope: punctuation.definition.generic.begin
+      push: generic-container
+    - match: '>'
+      scope: punctuation.definition.generic.end
+      pop: true
+    - match: ''
+      push: typename
+
+  definition:
+    - include: global
+    - match: '(?={{identifier}}\s*[=;])'
+      set: variable-definition
+    - match: '(?={{identifier}}\s*\()'
+      set: function-definition
+
+  definition-in-code:
+    - include: global
+    - match: '(?={{identifier}}\s*[=;\(])'
+      set: variable-definition
+
+  variable-definition-value:
+    - match: '='
+      scope: keyword.operator.assignment
+      set: expression
+    - match: '\('
+      scope: punctuation.section.params.begin
+      set: expression
+    - match: ';'
+      scope: punctuation.terminator
+      pop: true
+
+  variable-definition:
+    - match: 'm_{{identifier}}'
+      scope: variable.other.member
+      set: variable-definition-value
+    - match: '{{identifier}}'
+      scope: variable.other
+      set: variable-definition-value
+
+  function-definition:
+    - include: global
+    - match: '{{identifier}}'
+      scope: entity.name.function
+    - include: function-definition-params
+
+  function-constructor-definition:
+    - include: global
+    - match: '{{identifier}}'
+      scope: entity.name.function.constructor
+    - include: function-definition-params
+
+  function-parameter-definition:
+    - include: global
+    - match: '(?={{identifier}}\s*[,\)]?)'
+      set:
+        - include: global
+        - match: '{{identifier}}'
+          scope: variable.parameter
+        - match: '='
+          scope: keyword.operator.assignment
+          push:
+            - include: global
+            - match: '(?=[,\)])'
+              pop: true
+            - include: expression
+        - match: ','
+          scope: punctuation.separator
+          pop: true
+        - match: '(?=\))'
+          pop: true
+
+  function-definition-params:
+    - match: '\('
+      scope: punctuation.section.params.begin
+      push:
+        - meta_scope: meta.function meta.function.parameters
+        - include: global
+        - match: '(?={{possible_typename}}\s+{{identifier}})'
+          push:
+            - function-parameter-definition
+            - typename
+        - match: '\)'
+          scope: punctuation.section.params.end
+          pop: true
+    - match: ';'
+      scope: punctuation.terminator
+      pop: true
+    - match: '{'
+      scope: punctuation.section.block.begin
+      set:
+        - meta_scope: meta.function
+        - include: code-scope
+
+  comment-block:
+    - match: '\*/'
+      scope: punctuation.definition.comment
+      pop: true
+
+  has-comments:
+    - match: '(///).*$'
+      scope: comment.block.documentation
+      captures:
+        1: punctuation.definition.comment
+    - match: '(//).*$'
+      scope: comment.line
+      captures:
+        1: punctuation.definition.comment
+    - match: '(?=/\*\*[^/])'
+      push:
+        - meta_scope: comment.block.documentation
+        - match: '/\*\*'
+          scope: punctuation.definition.comment
+        - include: comment-block
+    - match: '(?=/\*)'
+      push:
+        - meta_scope: comment.block
+        - match: '/\*'
+          scope: punctuation.definition.comment
+        - include: comment-block
+
+  preprocessor-expression:
+    - include: global
+    - match: '$'
+      pop: true
+    - include: expression
+
+  has-preprocessor:
+    - match: '^\s*([#%])'
+      captures:
+        1: keyword.control.import
+      push:
+        - meta_scope: meta.preprocessor
+        - match: '(?i)(if|else|endif)\b'
+          scope: support.function
+          set: preprocessor-expression
+        - match: '(PROFILE_START|PROFILE_STOP)\b'
+          scope: support.function
+          set:
+            - meta_scope: string.unquoted
+            - match: '$'
+              pop: true
+        - match: '{{identifier}}'
+          scope: keyword.control.import
+          set: preprocessor-expression
+        - match: '$'
+          pop: true
+
+  has-namespaces:
+    - match: '\b(?=namespace)\b'
+      push: namespace
+
+  has-classes:
+    - include: has-metadatas
+    - match: '\b(?=class)\b'
+      push: class
+
+  has-enums:
+    - match: '\b(?=enum)\b'
+      push: enum
+
+  has-definitions-in-code:
+    - match: '(?=\b{{possible_typename}})'
+      push:
+        - definition-in-code
+        - typename
+
+  has-definitions:
+    - include: has-metadatas
+    - match: '\b(protected|private)\b'
+      scope: storage.modifier
+    - match: '(?=\b{{possible_typename}})'
+      push:
+        - definition
+        - typename
+
+  has-metadatas:
+    - match: '^\s*\['
+      scope: punctuation.definition.annotation
+      push:
+        - meta_scope: meta.annotation
+        - match: '{{identifier}}'
+          scope: keyword.other
+          push:
+            - match: '='
+              scope: keyword.operator.assignment
+              push:
+                - match: '"'
+                  scope: punctuation.definition.string.begin
+                  push: dstring
+                - match: ''
+                  scope: string.unquoted
+                - match: '(?=[\s\]])'
+                  pop: true
+            - match: ''
+              pop: true
+        - match: '\]'
+          scope: punctuation.definition.annotation
+          pop: true
+
+  main:
+    - include: has-namespaces
+    - include: has-classes
+    - include: has-enums
+    - include: has-definitions
+    - include: global
+    - match: '}'
+      scope: invalid
