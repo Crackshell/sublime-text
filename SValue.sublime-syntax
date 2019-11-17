@@ -8,7 +8,7 @@ file_extensions:
 scope: text.xml.sval
 variables:
   valid_attributes: '(name)'
-  valid_functions: '(loader|d|dict|a|array)'
+  valid_functions: '(loader|svals|d|dict|a|array)'
   valid_types: '(h|hstring|s|string|i|int|long|f|float|b|bool|vec[234]|ivec[234]|bytes|null)'
 contexts:
   preprocessor-expression:
