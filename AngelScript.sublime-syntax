@@ -532,7 +532,7 @@ contexts:
       push:
         - meta_scope: meta.function meta.function.parameters
         - include: global
-        - match: '(?={{possible_typename}}\s+{{identifier}})'
+        - match: '(?={{possible_typename}}\s+&?{{identifier}})'
           push:
             - function-parameter-definition
             - typename
