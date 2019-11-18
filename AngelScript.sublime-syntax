@@ -422,6 +422,7 @@ contexts:
     - match: '\s*(&(in|out|inout)?)'
       captures:
         1: keyword.other
+      pop: true
     - match: '@'
       scope: keyword.other
     - match: '<'

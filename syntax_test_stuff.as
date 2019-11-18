@@ -53,6 +53,17 @@ void func2(const string &in str, SValue& sval) {}
 //                                     ^ keyword.other
 //                                       ^^^^ variable.parameter
 
+void Load(WidgetLoadingContext &ctx) {}
+// <- storage.type
+//   ^^^^ meta.function entity.name.function
+//       ^ punctuation.section.params.begin
+//        ^^^^^^^^^^^^^^^^^^^^ storage.type
+//                             ^ keyword.other
+//                              ^^^ variable.parameter
+//                                 ^ punctuation.section.params.end
+//                                   ^ punctuation.section.block.begin
+//                                    ^ punctuation.section.block.end
+
 interface IThing
 // <- meta.interface storage.type.interface
 //        ^^^^^^ entity.name.interface
