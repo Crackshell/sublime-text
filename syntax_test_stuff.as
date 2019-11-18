@@ -95,6 +95,17 @@ uint g_bw = 1 | 2 | 3 & 4 & ~0xFF << 1 >> 2;
 
 void bitstuff()
 {
+  @(this.unit) = unit;
+  // <- keyword.other
+// ^ punctuation.section.parens.begin
+  //    ^ punctuation.accessor
+  //         ^ punctuation.section.parens.end
+  //           ^ keyword.operator.assignment
+  //             ^^^^ variable.other
+  //                 ^ punctuation.terminator
+  this.x = 1;
+  // <- variable.language
+
   for (uint i = 0; i < m_skills.length(); i++)
     stuff();
     // <- entity.name.function

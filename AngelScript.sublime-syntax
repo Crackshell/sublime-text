@@ -221,10 +221,12 @@ contexts:
         - include: expression-in-parens
 
   expression-has-operators:
-    - match: '(?=@?\b({{identifier}}\.?)+\s*({{operators_assignment}}|\[))'
+    - match: '(?=@?\(?\s*\b({{identifier}}\.?)+\s*\)?\s*({{operators_assignment}}|\[))'
       push:
         - match: '@'
           scope: keyword.other
+        - match: '(?=\()'
+          set: expression
         - match: '{{language_variables}}'
           scope: variable.language
           set: expression
