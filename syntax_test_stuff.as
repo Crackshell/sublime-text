@@ -95,6 +95,9 @@ uint g_bw = 1 | 2 | 3 & 4 & ~0xFF << 1 >> 2;
 
 void bitstuff()
 {
+  if (isOre && Fountain::HasEffect("no_ore")) {}
+  //  ^^^^^ variable.other
+
   @(this.unit) = unit;
   // <- keyword.other
 // ^ punctuation.section.parens.begin

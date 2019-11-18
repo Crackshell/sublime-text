@@ -248,7 +248,7 @@ contexts:
   expression:
     - meta_scope: meta.expression
 
-    - match: '{{operators_words}}'
+    - match: '\b{{operators_words}}\b'
       scope: keyword.operator.word
 
     - include: expression-has-functioncall
