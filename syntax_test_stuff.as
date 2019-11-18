@@ -22,6 +22,25 @@
 // <- source.as
 #endif
 
+abstract class ProjectileBase : IProjectile {}
+// <- meta.class storage.modifier
+//       ^^^^^ meta.class storage.type.class
+
+class ClassWithProperty
+{
+  uint Team { get { return 0; } }
+  // <- storage.type
+  //   ^^^^ variable.other
+  //        ^ punctuation.section.brackets.begin
+  //          ^^^ keyword.other
+  //              ^ punctuation.section.block.begin
+  //                ^^^^^^ keyword.control
+  //                       ^ constant.numeric
+  //                        ^ punctuation.terminator
+  //                          ^ punctuation.section.block.end
+  //                            ^ punctuation.section.brackets.end
+}
+
 void func2(const string &in str, SValue& sval) {}
 // <- storage.type
 //   ^^^^^ meta.function entity.name.function
