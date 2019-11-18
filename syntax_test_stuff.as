@@ -24,7 +24,7 @@
 
 void func2(const string &in str, SValue& sval) {}
 // <- storage.type
-//   ^^^^^ entity.name.function
+//   ^^^^^ meta.function entity.name.function
 //         ^^^^^ storage.modifier
 //               ^^^^^^ storage.type
 //                      ^^^ keyword.other

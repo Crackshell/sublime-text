@@ -472,6 +472,7 @@ contexts:
 
   function-definition:
     - include: global
+    - meta_scope: meta.function
     - match: '{{identifier}}'
       scope: entity.name.function
     - include: function-definition-params
