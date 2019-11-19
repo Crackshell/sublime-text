@@ -5,7 +5,6 @@ file_extensions:
   - unit
 scope: text.xml.unit
 variables:
-  valid_functions: '()'
   valid_types: '(unit|scenes|scene|collision|point|frame|sizes|colors|group)'
 contexts:
   preprocessor-expression:
@@ -277,8 +276,6 @@ contexts:
               push: attribute-value
             - include: attributes
 
-        - match: '\b{{valid_functions}}\b'
-          scope: entity.name.tag support.function
         - match: '\b{{valid_types}}\b'
           scope: entity.name.tag storage.type
         - match: '\b[A-Za-z0-9\-_]+\b'
