@@ -1,0 +1,240 @@
+%YAML 1.2
+---
+name: Crackshell Effect
+file_extensions:
+  - effect
+scope: text.xml.effect
+variables:
+  valid_expression_functions: '(sin|cos|abs|ceil|floor|exp|log|saturate|sign|sqrt|clamp|lerp|min|max|smoothstep|pow|rand|wpos[xyz]|wposyz|mod|prime)'
+  valid_types: '(variation)'
+contexts:
+  preprocessor-expression:
+    - match: '\b[A-Z0-9_]+\b'
+      scope: entity.name.constant
+    - match: '(\|\||&&)'
+      scope: keyword.operator.logical
+    - match: '"'
+      scope: punctuation.definition.string.begin
+      push:
+        - meta_scope: string.quoted.double
+        - match: '"'
+          scope: punctuation.definition.string.end
+          pop: true
+    - match: '$'
+      pop: true
+
+  has-preprocessor:
+    - match: '^\s*(%)'
+      captures:
+        1: keyword.control.import
+      push:
+        - meta_scope: meta.preprocessor
+        - match: '//.*'
+          scope: comment.line
+        - match: '(?i)(if|else|endif)\b'
+          scope: support.function
+          set: preprocessor-expression
+        - match: '(PROFILE_START|PROFILE_STOP)\b'
+          scope: support.function
+          set:
+            - meta_scope: string.unquoted
+            - match: '$'
+              pop: true
+        - match: '[A-Za-z_][A-Za-z0-9_]+'
+          scope: keyword.control.import
+          set: preprocessor-expression
+        - match: '$'
+          pop: true
+
+  comment:
+    - match: '<!--'
+      scope: punctuation.definition.comment.begin
+      push:
+        - meta_scope: comment.block
+        - match: '-->'
+          scope: punctuation.definition.comment.end
+          pop: true
+        - match: '-{2,}'
+          scope: invalid.illegal.double-hyphen-within-comment
+
+  string:
+    - meta_scope: string.quoted.double
+    - match: '"'
+      scope: punctuation.definition.string.end
+      pop: true
+
+  renderable-base-attributes:
+    - match: '(pos|delay|layer|ulayer)\b'
+      scope: support.other
+      push: attribute-value
+
+  attributes:
+    - include: has-preprocessor
+    - match: '[A-Za-z0-9\-_]+\b'
+      scope: entity.other.attribute-name
+      push: attribute-value
+    - match: '(?=/?>)'
+      pop: true
+
+  attribute-value:
+    - match: '='
+      scope: punctuation.separator.key-value
+    - match: '"'
+      scope: punctuation.definition.string.begin
+      push: string
+    - match: ''
+      pop: true
+
+  expression-attributes:
+    - include: has-preprocessor
+    - match: '[A-Za-z0-9\-_]+\b'
+      scope: entity.other.attribute-name
+      push: attribute-value-expression
+    - match: '(?=/?>)'
+      pop: true
+
+  attribute-value-expression:
+    - match: '='
+      scope: punctuation.separator.key-value
+    - match: '"'
+      scope: punctuation.definition.string.begin
+      push:
+        - match: '"'
+          scope: punctuation.definition.string.end
+          pop: true
+        - include: expression
+    - match: ''
+      pop: true
+
+  expression:
+    - meta_scope: meta.parens
+    - match: '\b{{valid_expression_functions}}\b'
+      scope: support.function
+    - match: '\b(pi)\b'
+      scope: support.constant
+    - match: '\b(true|false)\b'
+      scope: constant.language
+    - match: '\b[A-Za-z_][A-Za-z0-9_]*\b'
+      scope: variable.other
+    - match: '[+\-*/]'
+      scope: keyword.operator.arithmetic
+    - match: '[0-9\.]+'
+      scope: constant.numeric
+    - match: ','
+      scope: punctuation.separator
+    - match: '\('
+      scope: punctuation.section.parens.begin
+      push: expression
+    - match: '\)'
+      scope: punctuation.section.parens.end
+      pop: true
+
+  main:
+    - include: comment
+    - include: has-preprocessor
+    - match: '(<)/?$'
+      captures:
+        1: invalid.illegal.missing-entity
+    - match: '<'
+      scope: punctuation.definition.tag.begin
+      push:
+        - meta_scope: meta.tag.xml
+
+        - match: '/?>'
+          scope: punctuation.definition.tag.end
+          pop: true
+        - match: '/'
+          scope: punctuation.definition.tag.begin
+
+        - match: '\b(effect)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(material|looping|layer|wpos-track|bounds)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(param)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(name|default)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(data)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          set:
+            - match: '>'
+              scope: meta.tag.xml punctuation.definition.tag.end
+              embed: scope:text.xml.sval
+              escape: '(</)(data)(>)'
+              escape_captures:
+                1: meta.tag.xml punctuation.definition.tag.begin
+                2: meta.tag.xml storage.type
+                3: meta.tag.xml punctuation.definition.tag.end
+            - match: ''
+              pop: true
+
+        - match: '\b(light)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(start|origin)\b' # NOTE: "pos" used to be available, but has been deprecated, so we don't match it here!
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(sprite)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(angle|color-[rgba]|(scale|pos)-[xy]|num-sprites)\b'
+              scope: support.other
+              push: attribute-value-expression
+            - match: '(start|texture|material|origin|mask(ed)?|looping|loopback)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        # Note: Child of sprite
+        - match: '\b(frame)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '[xywh]\b'
+              scope: support.other
+              push: attribute-value-expression
+            - match: '(time)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(trail)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(start|texture|material|origin|mask(ed)?)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        # Note: Children of other elements (light, trail)
+        - match: '\b((pos|uv-[lr])-[xy]|segments|cast-shadows|length|looping|overlay|shadow-cast-pos-[xy]|size|angle|color-[rgba])\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(value)\b'
+              scope: support.other
+              push: attribute-value-expression
+            - include: attributes
+
+        - match: '\b{{valid_types}}\b'
+          scope: entity.name.tag storage.type
+        - match: '\b[A-Za-z0-9\-_]+\b'
+          scope: invalid.illegal.unsupported-type
+        - match: '\s+'
+          push: attributes
