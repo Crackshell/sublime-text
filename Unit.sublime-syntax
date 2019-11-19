@@ -68,6 +68,7 @@ contexts:
       push: attribute-value
 
   attributes:
+    - include: has-preprocessor
     - match: '[A-Za-z0-9\-_]+\b'
       scope: entity.other.attribute-name
       push: attribute-value
