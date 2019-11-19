@@ -132,13 +132,13 @@ contexts:
             6: punctuation.definition.string.end
           set:
             - match: '>'
-              scope: punctuation.definition.tag.end
+              scope: meta.tag.xml punctuation.definition.tag.end
               embed: scope:text.xml.sval
               escape: '(</)(data)(>)'
               escape_captures:
-                1: punctuation.definition.tag.begin
-                2: support.function
-                3: punctuation.definition.tag.end
+                1: meta.tag.xml punctuation.definition.tag.begin
+                2: meta.tag.xml storage.type
+                3: meta.tag.xml punctuation.definition.tag.end
             - match: ''
               pop: true
 
