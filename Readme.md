@@ -5,6 +5,8 @@ This package includes several Sublime Text syntaxes for multiple parts of Cracks
 2. Syntax for `.sval` files. This builds upon the standards of XML, but highlights specific keywords such as `dict`, `array`, `string`, etc. Also specifically highlights strings named `class`, and applies a namespace/class scope to its value.
 3. Syntax for `.unit` files. It's also based on XML, and is somewhat context-aware. Behaviors embed the SValue syntax, and attributes are contextually highlighted.
 4. Syntax for `.effect` files. Like XML, but also highlights expressions within attributes that accept them. Also embeds the sval syntax whenever a `<data>` tag is used.
+5. Syntax for `.fnt` files.
+6. Syntax for `.lang` files, with additional tag validation and highlighting of `%parameters%`.
 
 All syntaxes recognize the preprocessor commands as well, starting with `%`.
 
