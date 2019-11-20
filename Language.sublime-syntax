@@ -1,0 +1,125 @@
+%YAML 1.2
+---
+name: Crackshell Language
+file_extensions:
+  - lang
+scope: text.xml.lang
+variables:
+  valid_types: '(string)'
+contexts:
+  preprocessor-expression:
+    - match: '\b[A-Z0-9_]+\b'
+      scope: entity.name.constant
+    - match: '(\|\||&&)'
+      scope: keyword.operator.logical
+    - match: '"'
+      scope: punctuation.definition.string.begin
+      push:
+        - meta_scope: string.quoted.double
+        - match: '"'
+          scope: punctuation.definition.string.end
+          pop: true
+    - match: '$'
+      pop: true
+
+  has-preprocessor:
+    - match: '^\s*(%)'
+      captures:
+        1: keyword.control.import
+      push:
+        - meta_scope: meta.preprocessor
+        - match: '//.*'
+          scope: comment.line
+        - match: '(?i)(if|else|endif)\b'
+          scope: support.function
+          set: preprocessor-expression
+        - match: '(PROFILE_START|PROFILE_STOP)\b'
+          scope: support.function
+          set:
+            - meta_scope: string.unquoted
+            - match: '$'
+              pop: true
+        - match: '[A-Za-z_][A-Za-z0-9_]+'
+          scope: keyword.control.import
+          set: preprocessor-expression
+        - match: '$'
+          pop: true
+
+  comment:
+    - match: '<!--'
+      scope: punctuation.definition.comment.begin
+      push:
+        - meta_scope: comment.block
+        - match: '-->'
+          scope: punctuation.definition.comment.end
+          pop: true
+        - match: '-{2,}'
+          scope: invalid.illegal.double-hyphen-within-comment
+
+  string:
+    - meta_scope: string.quoted.double
+    - match: '"'
+      scope: punctuation.definition.string.end
+      pop: true
+
+  attributes:
+    - include: has-preprocessor
+    - match: '[A-Za-z0-9\-_]+\b'
+      scope: entity.other.attribute-name
+      push: attribute-value
+    - match: '(?=/?>)'
+      pop: true
+
+  attribute-value:
+    - match: '='
+      scope: punctuation.separator.key-value
+    - match: '"'
+      scope: punctuation.definition.string.begin
+      push: string
+    - match: ''
+      pop: true
+
+  main:
+    - include: comment
+    - include: has-preprocessor
+    - match: '(<)/?$'
+      captures:
+        1: invalid.illegal.missing-entity
+    - match: '<'
+      scope: punctuation.definition.tag.begin
+      push:
+        - meta_scope: meta.tag.xml
+
+        - match: '/?>'
+          scope: punctuation.definition.tag.end
+          pop: true
+        - match: '/'
+          scope: punctuation.definition.tag.begin
+
+        - match: '\b(lang)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(name)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(string)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - match: '(name)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b{{valid_types}}\b'
+          scope: entity.name.tag storage.type
+        - match: '\b[A-Za-z0-9\-_]+\b'
+          scope: invalid.illegal.unsupported-type
+        - match: '\s+'
+          push: attributes
+    - match: '((%)[^%\s]+(%))'
+      captures:
+        1: constant.other.placeholder
