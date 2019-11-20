@@ -648,6 +648,10 @@ contexts:
             - match: '='
               scope: keyword.operator.assignment
               push:
+                - match: '\b(true|false|null)\b'
+                  scope: constant.language
+                - match: '{{number}}'
+                  scope: constant.numeric
                 - match: '"'
                   scope: punctuation.definition.string.begin
                   push: dstring
