@@ -1,0 +1,82 @@
+%YAML 1.2
+---
+name: Crackshell Font
+file_extensions:
+  - fnt
+scope: text.crackshell.fnt
+variables:
+  identifier: '[A-Za-z][A-Za-z0-9]*'
+  number: '-?[0-9]+'
+contexts:
+  preprocessor-expression:
+    - match: '\b[A-Z0-9_]+\b'
+      scope: entity.name.constant
+    - match: '(\|\||&&)'
+      scope: keyword.operator.logical
+    - match: '"'
+      scope: punctuation.definition.string.begin
+      push:
+        - meta_scope: string.quoted.double
+        - match: '"'
+          scope: punctuation.definition.string.end
+          pop: true
+    - match: '$'
+      pop: true
+
+  has-preprocessor:
+    - match: '^\s*(%)'
+      captures:
+        1: keyword.control.import
+      push:
+        - meta_scope: meta.preprocessor
+        - match: '//.*'
+          scope: comment.line
+        - match: '(?i)(if|else|endif)\b'
+          scope: support.function
+          set: preprocessor-expression
+        - match: '(PROFILE_START|PROFILE_STOP)\b'
+          scope: support.function
+          set:
+            - meta_scope: string.unquoted
+            - match: '$'
+              pop: true
+        - match: '[A-Za-z_][A-Za-z0-9_]+'
+          scope: keyword.control.import
+          set: preprocessor-expression
+        - match: '$'
+          pop: true
+
+  string:
+    - meta_scope: string.quoted.double
+    - match: '"'
+      scope: punctuation.definition.string.end
+      pop: true
+
+  attribute-value:
+    - match: '='
+      scope: keyword.operator.assignment
+    - match: '{{number}}'
+      scope: constant.numeric
+    - match: ','
+      scope: punctuation.separator
+    - match: '"'
+      scope: punctuation.definition.string.begin
+      push: string
+    - match: '(?=[^\s]+)'
+      push:
+        - meta_scope: string.unquoted
+        - match: '(?=\s)'
+          pop: true
+    - match: ''
+      pop: true
+
+  attribute:
+    - match: '\b{{identifier}}(?==)\b'
+      scope: variable.parameter
+      push: attribute-value
+    - match: '\b{{identifier}}(?=\s*)\b'
+      scope: entity.name.function
+
+  main:
+    - include: has-preprocessor
+    - include: attribute
