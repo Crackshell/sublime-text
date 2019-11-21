@@ -3,6 +3,8 @@
 name: Crackshell SValue
 file_extensions:
   - sval
+  - lvl
+  - pfb
   - resources.xml
   - info.xml
 scope: text.xml.sval
