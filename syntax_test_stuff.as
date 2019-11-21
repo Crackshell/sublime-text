@@ -208,6 +208,17 @@ void bitstuff()
   }
   // <- punctuation.section.block.end
 
+  @Namespace::Object = Thing();
+  // <- keyword.other
+// ^^^^^^^^^ entity.name.namespace
+  //        ^^ punctuation.separator
+  //          ^^^^^^ variable.other
+  //                 ^ keyword.operator.assignment
+  //                   ^^^^^ entity.name.function
+  //                        ^ punctuation.section.parens.begin
+  //                         ^ punctuation.section.parens.end
+  //                          ^ punctuation.terminator
+
   int x = SomeNamespace::SomeFunction();
   // <- storage.type
   //  ^ variable.other

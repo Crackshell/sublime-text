@@ -243,8 +243,10 @@ contexts:
           set: expression
 
   expression-has-namespace-accessor:
-    - match: '{{identifier}}(?=::)'
-      scope: entity.name.namespace
+    - match: '(@)?({{identifier}})(?=::)'
+      captures:
+        1: keyword.other
+        2: entity.name.namespace
       push:
         - match: '::'
           scope: punctuation.separator
