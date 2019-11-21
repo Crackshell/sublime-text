@@ -4,8 +4,6 @@ name: Crackshell Language
 file_extensions:
   - lang
 scope: text.xml.lang
-variables:
-  valid_types: '(string)'
 contexts:
   preprocessor-expression:
     - match: '\b[A-Z0-9_]+\b'
@@ -114,8 +112,6 @@ contexts:
               push: attribute-value
             - include: attributes
 
-        - match: '\b{{valid_types}}\b'
-          scope: entity.name.tag storage.type
         - match: '\b[A-Za-z0-9\-_]+\b'
           scope: invalid.illegal.unsupported-type
         - match: '\s+'
