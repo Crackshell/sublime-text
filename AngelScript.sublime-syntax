@@ -475,6 +475,8 @@ contexts:
               set:
                 - meta_scope: meta.function
                 - include: code-scope
+            - match: ';'
+              pop: true
         - match: '}'
           scope: punctuation.section.brackets.end
           pop: true
