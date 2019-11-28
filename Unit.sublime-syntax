@@ -174,7 +174,18 @@ contexts:
           captures:
             1: entity.name.tag storage.type
           push:
-            - match: '(layer|origin|texture|frame)\b'
+            - include: renderable-base-attributes
+            - match: '(origin|texture|frame)\b'
+              scope: support.other
+              push: attribute-value
+            - include: attributes
+
+        - match: '\b(minimap_text)\s*\b'
+          captures:
+            1: entity.name.tag storage.type
+          push:
+            - include: renderable-base-attributes
+            - match: '(font|text|color|origin|width|align)\b'
               scope: support.other
               push: attribute-value
             - include: attributes
