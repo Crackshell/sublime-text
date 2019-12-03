@@ -170,7 +170,9 @@ contexts:
     - include: global
     - match: '\('
       scope: punctuation.section.parens.begin
-      push: expression
+      push:
+        - include: global
+        - include: expression
     - match: '\)'
       scope: punctuation.section.parens.end
       set:
