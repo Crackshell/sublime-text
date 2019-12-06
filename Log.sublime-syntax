@@ -1,0 +1,92 @@
+%YAML 1.2
+---
+name: Crackshell Log
+first_line_match: '^#A000FF Log - [0-9]{4}-[0-9]+-[0-9]+$'
+file_extensions:
+  - log
+scope: text.log
+variables:
+  path_identifier: '[A-za-z0-9\-_\.]'
+  full_path: '([A-Z]:)?({{path_identifier}}+[\\/])+{{path_identifier}}+'
+contexts:
+  line-contents:
+    - match: '(>) (.*)'
+      captures:
+        1: punctuation.separator
+        2: string.unquoted
+      pop: true
+    - match: 'Game build ([0-9]+)'
+      captures:
+        1: constant.numeric
+    - match: 'Build:\s+'
+      push:
+        - match: '[A-Z0-9_]+'
+          scope: constant.language
+        - match: '(?=$)'
+          pop: true
+    - match: 'Launch options:\s+'
+      push:
+        - match: '([0-9]+):\s+(.*)(?=$)'
+          captures:
+            1: constant.numeric
+            2: string.unquoted
+        - match: '(?=$)'
+          pop: true
+    - match: 'Steam ID:\s+'
+      push:
+        - match: '[0-9a-f]{15}'
+          scope: constant.numeric
+        - match: '(?=$)'
+          pop: true
+    - match: '\s(class) ([^\s]+)'
+      captures:
+        1: storage.type.class
+        2: entity.name.class
+    - match: '([0-9\.]+) ms'
+      captures:
+        1: constant.numeric
+    - match: '[A-Za-z]+ = ([0-9]+)'
+      captures:
+        1: constant.numeric
+    - match: '\s{2}[A-Z][A-Za-z0-9\s]+:\s+'
+      push:
+        - match: '.*$'
+          scope: string.unquoted
+          pop: true
+    - match: '\bevent:/{{full_path}}\b'
+      scope: markup.italic
+    - match: '\b{{full_path}}\b'
+      scope: markup.italic
+    - match: '$'
+      pop: true
+
+  lines:
+    - match: '^\['
+      scope: punctuation.section.braces.begin
+      push:
+        - match: 'NFO'
+          scope: support.constant
+        - match: 'WRN'
+          scope: support.function
+        - match: 'ERR'
+          scope: markup.deleted
+        - match: 'DBG'
+          scope: support.module
+        - match: '\]'
+          scope: punctuation.section.braces.end
+          pop: true
+    - match: '\['
+      scope: punctuation.section.braces.begin
+      push:
+        - match: '[0-9]{2}'
+          scope: constant.numeric
+        - match: ':'
+          scope: punctuation.separator
+        - match: '\]'
+          scope: punctuation.section.braces.end
+          set: line-contents
+
+  main:
+    - match: '^#A000FF Log .*$'
+      scope: entity.name.section
+      set: lines
