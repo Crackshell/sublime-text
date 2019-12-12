@@ -224,7 +224,9 @@ contexts:
               scope: entity.name.function
             - match: '\('
               scope: punctuation.section.parens.begin
-              set: expression
+              set:
+                - include: global
+                - include: expression
         - include: expression-in-parens
 
   expression-has-operators:
@@ -312,12 +314,16 @@ contexts:
 
     - match: '{'
       scope: punctuation.section.braces.begin
-      push: expression
+      push:
+        - include: global
+        - include: expression
     - match: '(?=\()'
       push: expression-in-parens
     - match: '\['
       scope: punctuation.section.brackets.begin
-      push: expression
+      push:
+        - include: global
+        - include: expression
     - match: '}'
       scope: punctuation.section.braces.end
       pop: true
