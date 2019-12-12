@@ -139,6 +139,18 @@ void bitstuff()
   this.x = 1;
   // <- variable.language
 
+  r.sort(function(a, b) { return true; });
+  //     ^^^^^^^^ storage.type.function
+  //             ^ punctuation.section.parens.begin
+  //              ^ variable.parameter
+  //               ^ punctuation.separator
+  //                 ^ variable.parameter
+  //                  ^ punctuation.section.parens.end
+  //                    ^ punctuation.section.block.begin
+  //                                   ^ punctuation.section.block.end
+  //                                    ^ punctuation.section.parens.end
+  //                                     ^ punctuation.terminator
+
   for (uint i = 0; i < m_skills.length(); i++)
     stuff();
     // <- entity.name.function

@@ -260,6 +260,24 @@ contexts:
     - match: '\b{{operators_words}}\b'
       scope: keyword.operator.word
 
+    - match: '\b(function)(?=\()'
+      scope: storage.type.function
+      push:
+        - include: global
+        - match: '\('
+          scope: punctuation.section.parens.begin
+          push:
+            - match: '{{identifier}}'
+              scope: variable.parameter
+            - match: ','
+              scope: punctuation.separator
+            - match: '\)'
+              scope: punctuation.section.parens.end
+              pop: true
+        - match: '{'
+          scope: punctuation.section.block.begin
+          set: code-scope
+
     - include: expression-has-functioncall
 
     - match: '\b{{number}}\b'
