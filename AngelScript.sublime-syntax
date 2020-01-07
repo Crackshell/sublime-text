@@ -11,11 +11,11 @@ variables:
   number: ((0(x|X)[0-9a-fA-F]*)|(([0-9]+\.?[0-9]*)|(\.[0-9]+))((e|E)(\+|-)?[0-9]+)?)(L|l|UL|ul|u|U|F|f)?
   primitives: (int|int8|int16|int32|int64|uint|uint8|uint16|uint32|uint64|bool|float|double|bool|auto|void|array|dictionary|ref)
 
-  class_modifiers: '(abstract)'
+  class_modifiers: '(abstract|mixin)'
   definition_modifiers: '(protected|private)'
 
   language_variables: '(this)'
-  language_support_functions: '(GetVar(Int|Float|Bool|String|Ivec2|Vec[234])|GetParam(Int|Long|Float|Bool|I?Vec[234]|String|Array|Dictionary)|HashString|SetVar|AddVar|print|xy|xyz|xyzw|atan|sin|asin|cos|acos|sqrt|pow|pow2|round|roundl|floor|ceil|log|normalize|dot|length|lengthsq|max|min|clamp|randf|randi|randdir|randfn|addrot|rottowards|capangle|angdiff|dist|distsq|formatTime|ease|formatThousands|formatInt|formatFloat|lerp|ilerp|sign|tocolor|i?vec[234]|UnitPtr)'
+  language_support_functions: '(GetVar(Int|Float|Bool|String|Ivec2|Vec[234])|GetParam(Int|Long|Float|Bool|I?Vec[234]|String|Array|Dictionary)|HashString|SetVar|AddVar|AddFunction|print|xy|xyz|xyzw|atan|sin|asin|cos|acos|sqrt|pow|pow2|round|roundl|floor|ceil|log|normalize|dot|length|lengthsq|max|min|clamp|randf|randi|randdir|randfn|addrot|rottowards|capangle|angdiff|dist|distsq|formatTime|ease|formatThousands|formatInt|formatFloat|lerp|ilerp|sign|tocolor|i?vec[234]|UnitPtr)'
 
   control_keywords_single: '(return|break|continue)'
   control_keywords: '(if|else|in|while|do|switch|try|catch)'
